@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crispy Calendar</title>
+
+    <link rel="icon" type="image/ico" href="/favicon.ico">
+    <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/calendar.css" />
+
+    <script src="/node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="calendar.js"></script>
+
+  </head>
+
+  <body onload="initialize()">
+
+    <div class="container-fluid" id="entire-page-div">
+
+      <div class="row">
+        <div class="col-sm-10 col-sm-offset-1" id="entire-page-col">
+
+          <!-- row for the date -->
+          <div class="row" id="date-row">
+            <div class="col-sm-12">
+              <p class="text-right" id="date-placeholder"></p>
+            </div>
+          </div>
+
+          <!-- row for all day events -->
+          <div class="row">
+            <div class="col-sm-9 col-sm-offset-3">
+              <div id="all-day-div-wrapper"></div>
+            </div>
+          </div>
+
+          <!-- row for timed events -->
+          <div class="row">
+            <div class="col-sm-1" id="am-pm-col">
+              <div>AM</div>
+              <div>PM</div>
+            </div>
+            <div class="col-sm-11" id="events-col">
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </body>
+
+</html>

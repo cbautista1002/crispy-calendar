@@ -1,0 +1,27 @@
+#entire-page-col{
+  border: 1px solid black;
+}
+
+#date-row{
+  height: 4rem;
+}
+
+.all-day-event{
+  display: block;
+}
+
+#am-pm-col{
+
+}
+
+
+.event-detail-row{
+  height: 4rem;
+}
+
+.event-detail-col{
+  position: absolute;
+  display: inline;
+  background-color: red;
+  height: inherit;
+}

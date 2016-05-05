@@ -1,0 +1,16 @@
+{
+  "name": "crispy-calendar",
+  "version": "1.0.0",
+  "description": "Calendar App",
+  "main": "server.js",
+  "scripts": {},
+  "author": "Carlos Bautista",
+  "license": "MIT",
+
+  "dependencies": {
+    "bootstrap": "^3.3.6",
+    "jquery": "^1.9.1",
+    "node-sass": "^3.4.2"
+  },
+  "devDependencies": {}
+}
