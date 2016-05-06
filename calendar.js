@@ -57,7 +57,36 @@ function initialize() {
 
 
 function setDate(){
-  $('#date-placeholder').html('today');
+  weekdays = [
+    "SUNDAY",
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY"
+  ]
+  months = [
+    "JANUARY",
+    "FEBRUARY",
+    "MARCH",
+    "APRIL",
+    "MAY",
+    "JUNE",
+    "JULY",
+    "AUGUST",
+    "SEPTEMBER",
+    "OCTOBER",
+    "NOVEMBER",
+    "DECEMBER"
+  ]
+
+  let curDate = new Date();
+  let day = weekdays[curDate.getDay()];
+  let month = months[curDate.getMonth()];
+  let date = curDate.getDate();
+
+  $('#date-placeholder').html(`${day}, ${month} ${date}`);
 }
 
 
@@ -103,19 +132,28 @@ function processEvents(eventsObj){
 function calculateOverlaps(){
 
   $.each(ALL_TIMED_EVENTS, function(eventIndex, event){
-
+    console.log(event);
     for(var i = event.startI; i < event.endI; i++){
       if(!TIME_SLOT_USAGE[i]){
         TIME_SLOT_USAGE[i] = [event];
       }
       else{
-        for(var j = 0; j < TIME_SLOT_USAGE[i].length; j++){
-          e = TIME_SLOT_USAGE[i][j];
-          if($.inArray(event.id, ID_TO_NEIGHBORS[e.id]) == -1){
-            ID_TO_NEIGHBORS[e.id].push(event.id)
-          }
-        }
+        // for(var j = 0; j < TIME_SLOT_USAGE[i].length; j++){
+        //   e = TIME_SLOT_USAGE[i][j];
+        //   if($.inArray(event.id, ID_TO_NEIGHBORS[e.id]) == -1){
+        //     ID_TO_NEIGHBORS[e.id].push(event.id);
+        //   }
+        // }
         TIME_SLOT_USAGE[i].push(event);
+      }
+      for(var j = 0; j < TIME_SLOT_USAGE[i].length; j++){
+        e = TIME_SLOT_USAGE[i][j];
+        console.log(e);
+        if($.inArray(event.id, ID_TO_NEIGHBORS[e.id]) == -1){
+          ID_TO_NEIGHBORS[e.id].push(event.id);
+          ID_TO_NEIGHBORS[event.id].push(e.id);
+          console.log('pushed');
+        }
       }
     }
 
@@ -133,13 +171,34 @@ function renderEvents(){
 
 function renderAllDayEvents(){
 
-  let allDay = '';
+  let allDay = `
+    <div class="row">
+      <div class="col-sm-1"></div>
+      <div class="col-sm-11">
+        <div class="row">
+          <div class="col-sm-1"></div>
+          <div class="col-sm-1"></div>
+          <div class="col-sm-10">
+  `;
 
   $.each(ALL_DAY_EVENTS, function(index, event){
     allDay += `
-      <div class="all-day-event">${event.title}</div>
+            <div class="row col-wrapping-row">
+              <div class="col-sm-12 topRowClass">
+                <div class="all-day-event borderClass paddingClass">
+                  ${event.title}
+                </div>
+              </div>
+            </div>
     `;
   });
+
+  allDay += `
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 
   $('#all-day-div-wrapper').html(allDay);
 
@@ -150,61 +209,149 @@ function renderTimedEvents(){
 
   let timeCode = '';
 
-  //
+  // keep track of drawn boxes for shifts
+  let usedColumns = [];
+
+  // offset per id if needed
+  let idOffsets = {};
 
   $.each(TIMES_SLOTS, function(index, timeSlot){
 
     let hour = '';
     let halfHour = '';
+    let hourBorder = '';
+    let halfhourBorder = '';
+    let halfHourLBorder = '';
 
     // On the hour
     if(index % 2 === 0){
       hour = timeSlot.substring(0, timeSlot.length-2);
+      hourBorder = 'hour-border';
     }
     // On the half hour
     else{
       halfHour = timeSlot.substring(0, timeSlot.length-2);
+      halfhourBorder = 'half-hour-border';
+      halfHourLBorder = 'half-hour-light-border';
     }
 
     let test = '';
 
+    let pmStarter = timeSlot == '12:00PM' ? 'pm-first-event-row' : '';
+
+    let eventRow = index < 6 ? 'am-event-row' : 'pm-event-row';
+
     timeCode += `
-      <div class="row event-detail-row">
-        <div class="col-sm-1">${hour}</div>
-        <div class="col-sm-1">${halfHour}</div>
+      <div class="row ${eventRow} ${hourBorder}" id="${pmStarter}">
+        <div class="col-sm-1">
+          <div class="time-marker-div hour-div">
+            ${hour}
+          </div>
+        </div>
+        <div class="col-sm-1 ${halfhourBorder}">
+          <div class="time-marker-div half-hour-div">
+            ${halfHour}
+          </div>
+        </div>
+        <div class="col-sm-10 ${halfHourLBorder}">
+          <div class="row event-detail-row">
     `;
 
     // if 1 event then col=10
     // if 2 event then col=10/2'
     var num = TIME_MAPPING[timeSlot];
     var parallel = 0;
+    var offset = 0;
 
     // for this timeslot, lets find future overlaps that impact this timeslots width
-
-
     if(TIME_SLOT_USAGE[num]){
-      var parallel = 0;
+      parallel = 0;
       $.each(TIME_SLOT_USAGE[num], function(i, e){
         if(ID_TO_NEIGHBORS[e.id].length > parallel){
           parallel = ID_TO_NEIGHBORS[e.id].length;
+          // usedColumns.push(e.id);
         }
-        console.log(timeSlot, parallel);
+        // console.log(timeSlot, parallel);
       });
     }
 
-    var numColsForEvents = 10/parallel;
+    // check if an offset is needed
+    // console.log(ID_TO_NEIGHBORS);
+    if(TIME_SLOT_USAGE[num]){
+      console.log('--------timeslot:', num, ' ---- ', usedColumns);
+      offset = 0;
+      $.each(TIME_SLOT_USAGE[num], function(i, e){
+        for(var k = 0; k < ID_TO_NEIGHBORS[e.id].length; k++){
+          aNeighborsId = ID_TO_NEIGHBORS[e.id][k];
+          console.log('my id', e.id);
+          console.log('neighbors list', ID_TO_NEIGHBORS[e.id]);
+          console.log('aNeighborsId', aNeighborsId);
 
-    $.each(ALL_TIMED_EVENTS, function(index, event){
-      if((event.startI <= num) && (event.endI > num)){
-        test += event.title;
+          if( ($.inArray(aNeighborsId, usedColumns) > -1)  && (aNeighborsId != e.id) ) {
+            console.log('**********here**********');
+            if(parallel != ID_TO_NEIGHBORS[e.id].length){
+              console.log('**********here2222**********');
+              offset = 12/parallel;
+              console.log('offset', offset);
+            }
+            if($.inArray(e.id, usedColumns) > -1){
+              console.log('**********here33333**********');
+              offset = 12/parallel;
+              console.log('offset', offset);
+            }
+            // if still drawing the same one then offset is 0
+            let numCells = e.endI - e.startI;
+            count = usedColumns.reduce(function(n, val) {
+              return n + (val === e.id);
+            }, 0);
+            console.log('check:', numCells, count);
+            if(numCells >= count){
+              offset = 0;
+            }
+            console.log('--- offset:', offset);
+            // console.log('--- idOffsets[e.id]:', idOffsets[e.id]);
+          }
+
+        }
+        // console.log(timeSlot, parallel);
+      });
+    }
+
+    var numColsForEvents = 12/parallel;
+
+    // $.each(ALL_TIMED_EVENTS, function(index, event){
+    //   if((event.startI <= num) && (event.endI > num)){
+    //     test += event.title;
+    //   }
+    // });
+
+    $.each(TIME_SLOT_USAGE[num], function(i, e){
+      if(e.id in idOffsets){
+        if(TIME_SLOT_USAGE[num].length == 1){
+          offset = 12/ID_TO_NEIGHBORS[e.id].length * idOffsets[e.id];
+        }
       }
+      idOffsets[e.id] = i;
+      let titleToShow = `${timeSlot}-<br>${e.title}<br>${e.location}`;
+      let topRowClass = 'topRowClass';
+      let paddingClass = 'paddingClass';
+      let borderClass = 'borderClass';
+      if($.inArray(e.id, usedColumns) > -1){
+        titleToShow = '';
+        topRowClass = '';
+        paddingClass = '';
+      }
+      timeCode += `
+        <div class="col-sm-${numColsForEvents} col-sm-offset-${offset} event-detail-col ${topRowClass}">
+          <div class="${paddingClass} ${borderClass}">${titleToShow}</div>
+        </div>
+      `;
+      usedColumns.push(e.id);
     });
 
-    // Find the event to show
-
-
     timeCode += `
-        <div class="col-sm-${numColsForEvents} event-detail-col">${test}</div>
+          </div>
+        </div>
       </div>
     `;
   });

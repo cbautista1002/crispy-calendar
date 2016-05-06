@@ -31,16 +31,20 @@
 
           <!-- row for all day events -->
           <div class="row">
-            <div class="col-sm-9 col-sm-offset-3">
+            <div class="col-sm-12">
               <div id="all-day-div-wrapper"></div>
             </div>
           </div>
 
           <!-- row for timed events -->
-          <div class="row">
+          <div class="row" id="timed-event-main-row">
             <div class="col-sm-1" id="am-pm-col">
-              <div>AM</div>
-              <div>PM</div>
+              <div class="row" id="am-text-div-row">
+                <div id="am-text-div">AM</div>
+              </div>
+              <div class="row" id="pm-text-div-row">
+                <div id="pm-text-div">PM</div>
+              </div>
             </div>
             <div class="col-sm-11" id="events-col">
             </div>
