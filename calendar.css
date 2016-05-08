@@ -1,5 +1,7 @@
 #entire-page-col{
   background-color: rgba(230,230,230,0.40);
+  box-shadow: 0px 0px 8px #959595;
+
 }
 
 #date-row{
@@ -19,8 +21,8 @@
 }
 
 #am-text-div-row{
-  height: 24.6rem;
-  background-color: rgba(245,129,180,0.1);
+  height: 24rem;
+  background-color: rgba(248, 222, 234, 0.27);
 }
 #am-text-div{
   padding: 15px;
@@ -39,16 +41,32 @@
 }
 
 #timed-event-main-row{
-  border-top: 1px solid #EB3F8B;
+  /*border-top: 1px solid #EB3F8B;*/
   margin-top: 4px;
+}
+#timed-event-main-row:before{
+  border-top: 1px #EB3F8B solid;
+  right: 0;
+  content: "";
+  position: absolute;
+  height: 1px;
+  width: 100%;
 }
 
 #pm-first-event-row{
-  border-top: 1px solid #88C7F6;
+  /*border-top: 1px solid #88C7F6;*/
+}
+#pm-first-event-row:before{
+  border-top: 1px #88C7F6 solid;
+  right: 0;
+  content: "";
+  position: absolute;
+  height: 1px;
+  width: 100%;
 }
 
 .am-event-row{
-  background-color: rgba(245,129,180,0.1);
+  background-color: rgba(248, 222, 234, 0.27);
 }
 
 .pm-event-row{
@@ -58,11 +76,17 @@
 .hour-border{
   border-top: 1px #C5C5C5 solid;
 }
+.hour-light-border{}
+.hour-light-border:before, .half-hour-light-border:before, .top-row-class:before{
+  border-top: 1px rgba(210,209,209,0.87) solid;
+  right: 0;
+  content: "";
+  position: absolute;
+  height: 1px;
+  width: 100%;
+}
 .half-hour-border{
   border-top: 1px #C5C5C5 solid;
-}
-.half-hour-light-border{
-  border-top: 1px rgba(210,209,209,0.87) solid;
 }
 
 .time-marker-div{
@@ -81,9 +105,6 @@
 }
 
 .event-detail-col{
-  /*position: absolute;*/
-  /*display: inline;*/
-  /*background-color: #F58383;*/
   background-color: white;
   height: inherit;
   background-clip: content-box;
@@ -93,19 +114,45 @@
   height: inherit;
 }
 
-.topRowClass{
-  /*background-color: #CCCCEC;*/
+.main-event-row{
+  padding-right: 0;
+}
+
+.top-row-class{
   background-color: white;
   background-clip: content-box;
 }
-.paddingClass{
+.all-day-row-class{
+  background-color: white;
+  background-clip: content-box;
+}
+.padding-class{
   padding: 8px 0 0 11px;
 }
-.borderClass{
+.border-class{
   border-left: 8px solid #00BF00;
   height: inherit;
+}
+.overlay-text{
+  z-index: 100;
+  display: inline;
+  position: absolute;
 }
 .col-wrapping-row{
   margin-top: 4px;
   margin-bottom: 2px;
+}
+
+.event-time-span{
+  color: #858585;
+}
+.event-title-span{
+  color: black;
+  font-weight: bold;
+}
+.event-location-span{
+  color: #0A890A;
+}
+.overflow-ctrl{
+  white-space: nowrap;
 }

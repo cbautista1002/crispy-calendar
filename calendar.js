@@ -184,9 +184,11 @@ function renderAllDayEvents(){
   $.each(ALL_DAY_EVENTS, function(index, event){
     allDay += `
             <div class="row col-wrapping-row">
-              <div class="col-sm-12 topRowClass">
-                <div class="all-day-event borderClass paddingClass">
-                  ${event.title}
+              <div class="col-sm-12 all-day-row-class event-detail-row main-event-row">
+                <div class="all-day-event border-class padding-class overlay-text">
+                  <span class="event-time-span">ALL DAY&#65293;</span>
+                  <span class="event-title-span">${event.title}</span>
+                  <span class="event-location-span">${event.location}</span>
                 </div>
               </div>
             </div>
@@ -220,19 +222,16 @@ function renderTimedEvents(){
     let hour = '';
     let halfHour = '';
     let hourBorder = '';
-    let halfhourBorder = '';
-    let halfHourLBorder = '';
+    let halfhourBorder = 'half-hour-border';
+    let longBorder = 'half-hour-light-border';
 
     // On the hour
     if(index % 2 === 0){
       hour = timeSlot.substring(0, timeSlot.length-2);
-      hourBorder = 'hour-border';
     }
     // On the half hour
     else{
       halfHour = timeSlot.substring(0, timeSlot.length-2);
-      halfhourBorder = 'half-hour-border';
-      halfHourLBorder = 'half-hour-light-border';
     }
 
     let test = '';
@@ -253,7 +252,7 @@ function renderTimedEvents(){
             ${halfHour}
           </div>
         </div>
-        <div class="col-sm-10 ${halfHourLBorder}">
+        <div class="col-sm-10 ${longBorder} main-event-row">
           <div class="row event-detail-row">
     `;
 
@@ -309,21 +308,13 @@ function renderTimedEvents(){
               offset = 0;
             }
             console.log('--- offset:', offset);
-            // console.log('--- idOffsets[e.id]:', idOffsets[e.id]);
           }
 
         }
-        // console.log(timeSlot, parallel);
       });
     }
 
     var numColsForEvents = 12/parallel;
-
-    // $.each(ALL_TIMED_EVENTS, function(index, event){
-    //   if((event.startI <= num) && (event.endI > num)){
-    //     test += event.title;
-    //   }
-    // });
 
     $.each(TIME_SLOT_USAGE[num], function(i, e){
       if(e.id in idOffsets){
@@ -332,10 +323,20 @@ function renderTimedEvents(){
         }
       }
       idOffsets[e.id] = i;
-      let titleToShow = `${timeSlot}-<br>${e.title}<br>${e.location}`;
-      let topRowClass = 'topRowClass';
-      let paddingClass = 'paddingClass';
-      let borderClass = 'borderClass';
+      let overflowCtrl = '';
+      let withBr = '<br>';
+      if(e.endI - e.startI == 1){
+        overflowCtrl = 'overflow-ctrl';
+        withBr = '';
+      }
+      let titleToShow = `
+        <span class="event-time-span">${timeSlot}&#65293;</span>${withBr}
+        <span class="event-title-span">${e.title}</span>${withBr}
+        <span class="event-location-span">${e.location}</span>
+      `;
+      let topRowClass = 'top-row-class';
+      let paddingClass = 'padding-class';
+      let borderClass = 'border-class';
       if($.inArray(e.id, usedColumns) > -1){
         titleToShow = '';
         topRowClass = '';
@@ -343,7 +344,9 @@ function renderTimedEvents(){
       }
       timeCode += `
         <div class="col-sm-${numColsForEvents} col-sm-offset-${offset} event-detail-col ${topRowClass}">
-          <div class="${paddingClass} ${borderClass}">${titleToShow}</div>
+          <div class="${paddingClass} ${borderClass} overlay-text ${overflowCtrl}">
+            ${titleToShow}
+          </div>
         </div>
       `;
       usedColumns.push(e.id);
