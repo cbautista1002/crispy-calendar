@@ -45,17 +45,18 @@ var TIME_SLOT_USAGE = Array(24).fill(null);
 var ID_TO_NEIGHBORS = {};
 
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------
 // Function called on load of html page
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------
 function initialize() {
-
   setDate();
   getEvents();
-
 }
 
 
+// ------------------------------------------------------
+// Calculate and display the day, month and date
+// ------------------------------------------------------
 function setDate(){
   weekdays = [
     "SUNDAY",
@@ -86,10 +87,13 @@ function setDate(){
   let month = months[curDate.getMonth()];
   let date = curDate.getDate();
 
-  $('#date-placeholder').html(`${day}, ${month} ${date}`);
+  $('#day-date').html(`${day}, ${month} ${date}`);
 }
 
 
+// ------------------------------------------------------
+// Load the events from the server
+// ------------------------------------------------------
 function getEvents(){
 
   $.ajax({
@@ -104,18 +108,28 @@ function getEvents(){
     error: function(data, text_status, error_thrown){
       console.error('ERROR: ', data, '\n', text_status, '\n', error_thrown);
     }
+
   });
 
 }
 
 
+// ------------------------------------------------------
+// Look through the events and save them into data containers
+// ------------------------------------------------------
 function processEvents(eventsObj){
+
   var idCounter = 0;
+
   $.each(eventsObj.items, function(index, event){
+
+    // For all day events
     if((event.start_time === '12:00AM') && (event.end_time === '11:59PM')){
       ALL_DAY_EVENTS.push(event);
       event.id = idCounter;
     }
+
+    // For timed events (not all day)
     else{
       event.startI = TIME_MAPPING[event.start_time];
       event.endI = TIME_MAPPING[event.end_time];
@@ -123,9 +137,13 @@ function processEvents(eventsObj){
       ID_TO_NEIGHBORS[event.id] = [event.id];
       ALL_TIMED_EVENTS.push(event);
     }
+
     idCounter++;
+
   });
+
   calculateOverlaps();
+
 }
 
 
@@ -138,12 +156,6 @@ function calculateOverlaps(){
         TIME_SLOT_USAGE[i] = [event];
       }
       else{
-        // for(var j = 0; j < TIME_SLOT_USAGE[i].length; j++){
-        //   e = TIME_SLOT_USAGE[i][j];
-        //   if($.inArray(event.id, ID_TO_NEIGHBORS[e.id]) == -1){
-        //     ID_TO_NEIGHBORS[e.id].push(event.id);
-        //   }
-        // }
         TIME_SLOT_USAGE[i].push(event);
       }
       for(var j = 0; j < TIME_SLOT_USAGE[i].length; j++){
@@ -184,7 +196,7 @@ function renderAllDayEvents(){
   $.each(ALL_DAY_EVENTS, function(index, event){
     allDay += `
             <div class="row col-wrapping-row">
-              <div class="col-sm-12 all-day-row-class event-detail-row main-event-row">
+              <div class="col-sm-12 all-day-row-class event-detail-row">
                 <div class="all-day-event border-class padding-class overlay-text">
                   <span class="event-time-span">ALL DAY&#65293;</span>
                   <span class="event-title-span">${event.title}</span>
@@ -222,8 +234,8 @@ function renderTimedEvents(){
     let hour = '';
     let halfHour = '';
     let hourBorder = '';
-    let halfhourBorder = 'half-hour-border';
-    let longBorder = 'half-hour-light-border';
+    let halfhourBorder = index > 0 ? 'half-hour-border' : '';
+    let longBorder = index > 0 ? 'half-hour-light-border' : '';
 
     // On the hour
     if(index % 2 === 0){
@@ -252,12 +264,10 @@ function renderTimedEvents(){
             ${halfHour}
           </div>
         </div>
-        <div class="col-sm-10 ${longBorder} main-event-row">
+        <div class="col-sm-10 ${longBorder}">
           <div class="row event-detail-row">
     `;
 
-    // if 1 event then col=10
-    // if 2 event then col=10/2'
     var num = TIME_MAPPING[timeSlot];
     var parallel = 0;
     var offset = 0;
@@ -268,14 +278,11 @@ function renderTimedEvents(){
       $.each(TIME_SLOT_USAGE[num], function(i, e){
         if(ID_TO_NEIGHBORS[e.id].length > parallel){
           parallel = ID_TO_NEIGHBORS[e.id].length;
-          // usedColumns.push(e.id);
         }
-        // console.log(timeSlot, parallel);
       });
     }
 
     // check if an offset is needed
-    // console.log(ID_TO_NEIGHBORS);
     if(TIME_SLOT_USAGE[num]){
       console.log('--------timeslot:', num, ' ---- ', usedColumns);
       offset = 0;

@@ -1,3 +1,6 @@
+#page-container{
+  margin: 30px 0 30px 0;
+}
 #entire-page-col{
   background-color: rgba(230,230,230,0.40);
   box-shadow: 0px 0px 8px #959595;
@@ -14,10 +17,6 @@
 .all-day-event{
   display: block;
   height: 4rem;
-}
-
-#am-pm-col{
-
 }
 
 #am-text-div-row{
@@ -41,16 +40,8 @@
 }
 
 #timed-event-main-row{
-  /*border-top: 1px solid #EB3F8B;*/
+  border-top: 1px solid #EB3F8B;
   margin-top: 4px;
-}
-#timed-event-main-row:before{
-  border-top: 1px #EB3F8B solid;
-  right: 0;
-  content: "";
-  position: absolute;
-  height: 1px;
-  width: 100%;
 }
 
 #pm-first-event-row{
@@ -85,6 +76,14 @@
   height: 1px;
   width: 100%;
 }
+.first-event-border{
+  border-top: 1px rgba(210,209,209,0.87) solid;
+  right: 0;
+  content: "";
+  position: absolute;
+  height: 1px;
+  width: 100%;
+}
 .half-hour-border{
   border-top: 1px #C5C5C5 solid;
 }
@@ -108,14 +107,11 @@
   background-color: white;
   height: inherit;
   background-clip: content-box;
+  padding: 0 0 0 5px;
 }
 
 .event-detail-col-row{
   height: inherit;
-}
-
-.main-event-row{
-  padding-right: 0;
 }
 
 .top-row-class{
@@ -125,6 +121,7 @@
 .all-day-row-class{
   background-color: white;
   background-clip: content-box;
+  padding: 0 0 0 5px;
 }
 .padding-class{
   padding: 8px 0 0 11px;
