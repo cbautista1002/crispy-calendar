@@ -50,7 +50,7 @@ var ID_TO_NEIGHBORS = {};
 // ------------------------------------------------------
 function initialize() {
   setDate();
-  getEvents();
+  loadEvents();
 }
 
 
@@ -94,7 +94,7 @@ function setDate(){
 // ------------------------------------------------------
 // Load the events from the server
 // ------------------------------------------------------
-function getEvents(){
+function loadEvents(){
 
   $.ajax({
     type: 'get',
@@ -134,7 +134,7 @@ function processEvents(eventsObj){
       event.startI = TIME_MAPPING[event.start_time];
       event.endI = TIME_MAPPING[event.end_time];
       event.id = idCounter;
-      ID_TO_NEIGHBORS[event.id] = [event.id];
+      ID_TO_NEIGHBORS[event.id] = [];
       ALL_TIMED_EVENTS.push(event);
     }
 
@@ -142,45 +142,76 @@ function processEvents(eventsObj){
 
   });
 
-  calculateOverlaps();
+  findNeighbors();
 
 }
 
 
-function calculateOverlaps(){
+// ------------------------------------------------------
+// Figure out what neighbors each event has for then
+// being able to properly display the columns
+// ------------------------------------------------------
+function findNeighbors(){
 
-  $.each(ALL_TIMED_EVENTS, function(eventIndex, event){
-    console.log(event);
-    for(var i = event.startI; i < event.endI; i++){
-      if(!TIME_SLOT_USAGE[i]){
-        TIME_SLOT_USAGE[i] = [event];
-      }
-      else{
-        TIME_SLOT_USAGE[i].push(event);
-      }
-      for(var j = 0; j < TIME_SLOT_USAGE[i].length; j++){
-        e = TIME_SLOT_USAGE[i][j];
-        console.log(e);
-        if($.inArray(event.id, ID_TO_NEIGHBORS[e.id]) == -1){
-          ID_TO_NEIGHBORS[e.id].push(event.id);
-          ID_TO_NEIGHBORS[event.id].push(e.id);
-          console.log('pushed');
-        }
-      }
+  // Initialize each position with an empty array value
+  for(var i = 0; i < TIME_SLOT_USAGE.length; i++){
+    TIME_SLOT_USAGE[i] = Array();
+  }
+
+  $.each(ALL_TIMED_EVENTS, function(outerI, outerE){
+
+    // Fill in the time slot usage
+    for(var i = outerE.startI; i < outerE.endI; i++){
+      TIME_SLOT_USAGE[i].push(outerE);
     }
 
+    // Now look for neighbors
+    $.each(ALL_TIMED_EVENTS, function(innerI, innerE){
+
+      if(outerE.id == innerE.id){
+        return;
+      }
+
+      if(((innerE.startI >= outerE.startI) && (innerE.startI < outerE.endI)) ||
+         ((outerE.startI >= innerE.startI) && (outerE.startI < innerE.endI)) ){
+        ID_TO_NEIGHBORS[outerE.id].push(innerE.id);
+        // console.log(`${outerE.title}(${outerE.id}) ${innerE.title}(${innerE.id})`);
+      }
+
+    });
   });
-  console.log(TIME_SLOT_USAGE);
-  console.log(ID_TO_NEIGHBORS);
+
+  // Update with indirect neighbors
+  $.each(ID_TO_NEIGHBORS, function(eventId, nborList){
+    let union = [];
+    $.each(nborList, function(index, nborId){
+      let a = new Set(nborList);
+      let b = new Set(ID_TO_NEIGHBORS[nborId]);
+      union = new Set([...a, ...b]);
+      union = Array.from(union);
+      let iToRemove = union.indexOf(parseInt(eventId));
+      if (iToRemove > -1) {
+        union.splice(iToRemove, 1);
+      }
+    });
+    ID_TO_NEIGHBORS[eventId] = union;
+  });
+
 }
 
 
+// ------------------------------------------------------
+// Show all of the events
+// ------------------------------------------------------
 function renderEvents(){
   renderAllDayEvents();
   renderTimedEvents();
 }
 
 
+// ------------------------------------------------------
+// Show only the all day events at the top of the page
+// ------------------------------------------------------
 function renderAllDayEvents(){
 
   let allDay = `
@@ -219,12 +250,12 @@ function renderAllDayEvents(){
 }
 
 
+// ------------------------------------------------------
+// Show all of the timed events
+// ------------------------------------------------------
 function renderTimedEvents(){
 
   let timeCode = '';
-
-  // keep track of drawn boxes for shifts
-  let usedColumns = [];
 
   // offset per id if needed
   let idOffsets = {};
@@ -233,7 +264,7 @@ function renderTimedEvents(){
 
     let hour = '';
     let halfHour = '';
-    let hourBorder = '';
+    let hourBorder = index % 2 == 0 ? 'hour-light-border' : '';;
     let halfhourBorder = index > 0 ? 'half-hour-border' : '';
     let longBorder = index > 0 ? 'half-hour-light-border' : '';
 
@@ -268,104 +299,102 @@ function renderTimedEvents(){
           <div class="row event-detail-row">
     `;
 
-    var num = TIME_MAPPING[timeSlot];
-    var parallel = 0;
-    var offset = 0;
-
-    // for this timeslot, lets find future overlaps that impact this timeslots width
-    if(TIME_SLOT_USAGE[num]){
-      parallel = 0;
-      $.each(TIME_SLOT_USAGE[num], function(i, e){
-        if(ID_TO_NEIGHBORS[e.id].length > parallel){
-          parallel = ID_TO_NEIGHBORS[e.id].length;
-        }
-      });
-    }
-
-    // check if an offset is needed
-    if(TIME_SLOT_USAGE[num]){
-      console.log('--------timeslot:', num, ' ---- ', usedColumns);
-      offset = 0;
-      $.each(TIME_SLOT_USAGE[num], function(i, e){
-        for(var k = 0; k < ID_TO_NEIGHBORS[e.id].length; k++){
-          aNeighborsId = ID_TO_NEIGHBORS[e.id][k];
-          console.log('my id', e.id);
-          console.log('neighbors list', ID_TO_NEIGHBORS[e.id]);
-          console.log('aNeighborsId', aNeighborsId);
-
-          if( ($.inArray(aNeighborsId, usedColumns) > -1)  && (aNeighborsId != e.id) ) {
-            console.log('**********here**********');
-            if(parallel != ID_TO_NEIGHBORS[e.id].length){
-              console.log('**********here2222**********');
-              offset = 12/parallel;
-              console.log('offset', offset);
-            }
-            if($.inArray(e.id, usedColumns) > -1){
-              console.log('**********here33333**********');
-              offset = 12/parallel;
-              console.log('offset', offset);
-            }
-            // if still drawing the same one then offset is 0
-            let numCells = e.endI - e.startI;
-            count = usedColumns.reduce(function(n, val) {
-              return n + (val === e.id);
-            }, 0);
-            console.log('check:', numCells, count);
-            if(numCells >= count){
-              offset = 0;
-            }
-            console.log('--- offset:', offset);
-          }
-
-        }
-      });
-    }
-
-    var numColsForEvents = 12/parallel;
-
-    $.each(TIME_SLOT_USAGE[num], function(i, e){
-      if(e.id in idOffsets){
-        if(TIME_SLOT_USAGE[num].length == 1){
-          offset = 12/ID_TO_NEIGHBORS[e.id].length * idOffsets[e.id];
-        }
-      }
-      idOffsets[e.id] = i;
-      let overflowCtrl = '';
-      let withBr = '<br>';
-      if(e.endI - e.startI == 1){
-        overflowCtrl = 'overflow-ctrl';
-        withBr = '';
-      }
-      let titleToShow = `
-        <span class="event-time-span">${timeSlot}&#65293;</span>${withBr}
-        <span class="event-title-span">${e.title}</span>${withBr}
-        <span class="event-location-span">${e.location}</span>
-      `;
-      let topRowClass = 'top-row-class';
-      let paddingClass = 'padding-class';
-      let borderClass = 'border-class';
-      if($.inArray(e.id, usedColumns) > -1){
-        titleToShow = '';
-        topRowClass = '';
-        paddingClass = '';
-      }
-      timeCode += `
-        <div class="col-sm-${numColsForEvents} col-sm-offset-${offset} event-detail-col ${topRowClass}">
-          <div class="${paddingClass} ${borderClass} overlay-text ${overflowCtrl}">
-            ${titleToShow}
-          </div>
-        </div>
-      `;
-      usedColumns.push(e.id);
-    });
+    timeCode += calculateRowContents(timeSlot, idOffsets)
 
     timeCode += `
-          </div>
         </div>
       </div>
+    </div>
     `;
+
   });
 
   $('#events-col').html(timeCode);
+}
 
+
+// ------------------------------------------------------
+// Show the contents of each timed event row - the
+// actual events
+// ------------------------------------------------------
+function calculateRowContents(timeSlot, idOffsets){
+
+  var num = TIME_MAPPING[timeSlot];
+  var parallel = 0;
+  var rowCode = '';
+
+  var alreadyShifted = [];
+  for(var i = 0; i < TIME_SLOT_USAGE[num].length; i++){
+    var offset = 0;
+    // Lets draw an event, but first how many neighbors does it have?
+    let eventToDraw = TIME_SLOT_USAGE[num][i];
+    parallel = ID_TO_NEIGHBORS[eventToDraw.id].length + 1;
+    numColsForEvents = 12/parallel;
+
+    // Check if an offset is needed
+    if(eventToDraw.id in idOffsets){
+      offset = i != 0 ? '0' : numColsForEvents;
+      console.log(`offset for ${eventToDraw.title} is ${offset}`);
+    }
+    // Only add to offset if event is not the first to be drawn for a given row
+    if(i > 0){
+      TIME_SLOT_USAGE[num].length
+      if(!(eventToDraw.id in idOffsets)){
+        idOffsets[eventToDraw.id] = i;
+      }
+      // Add an offset to the top row of an event if its body will be shifted
+      var nextIndexForThisEvent = null;
+      for(var j = 0; j < TIME_SLOT_USAGE[num+1].length; j++){
+        if(TIME_SLOT_USAGE[num+1][j].id == eventToDraw.id){
+          nextIndexForThisEvent = j;
+        }
+      }
+      if(nextIndexForThisEvent > i){
+        let diff = nextIndexForThisEvent - i;
+        if(alreadyShifted.indexOf(i-1) == -1){
+          offset = numColsForEvents * diff;
+        }
+        alreadyShifted.push(i);
+        console.log(`nextIndexForThisEvent for ${eventToDraw.title} is ${nextIndexForThisEvent} and i=${i}`);
+      }
+      // Add an offset if needed to single slot events
+      if((eventToDraw.endI - eventToDraw.startI == 1) &&
+        (TIME_SLOT_USAGE[num+1].length == TIME_SLOT_USAGE[num].length)){
+        offset = numColsForEvents;
+        console.log(`offset for ${eventToDraw.title} is ${offset}`);
+      }
+    }
+
+    let overflowCtrl = '';
+    let withBr = '<br>';
+
+    if(eventToDraw.endI - eventToDraw.startI == 1){
+      overflowCtrl = 'overflow-ctrl';
+      withBr = '';
+    }
+
+    let contentToShow = `
+      <span class="event-time-span">${eventToDraw.start_time}&#65293;</span>${withBr}
+      <span class="event-title-span">${eventToDraw.title}</span>${withBr}
+      <span class="event-location-span">${eventToDraw.location}</span>
+    `;
+
+    let topRowClass = 'top-row-class';
+    let paddingClass = 'padding-class';
+    let borderClass = 'border-class';
+    if(eventToDraw.startI != num){
+      contentToShow = '';
+      topRowClass = '';
+      paddingClass = '';
+    }
+
+    rowCode += `
+          <div class="col-sm-${numColsForEvents} col-sm-offset-${offset} event-detail-col ${topRowClass} ${overflowCtrl}">
+            <div class="${paddingClass} ${borderClass} overlay-text overlay-text">
+              ${contentToShow}
+            </div>
+          </div>
+    `;
+  }
+  return rowCode;
 }

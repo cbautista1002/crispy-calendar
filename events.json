@@ -7,12 +7,6 @@
       "location": "Brooklyn"
     },
     {
-      "title": "Sample Item 1",
-      "start_time": "12:00AM",
-      "end_time": "11:59PM",
-      "location": "NYC"
-    },
-    {
       "title": "Sample Item 2",
       "start_time": "9:00AM",
       "end_time": "10:00AM",
@@ -51,7 +45,7 @@
     {
       "title": "Sample Item 8",
       "start_time": "5:00PM",
-      "end_time": "5:30PM",
+      "end_time": "6:30PM",
       "location": "Hawaii"
     }
   ]
